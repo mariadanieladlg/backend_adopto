@@ -2,7 +2,7 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-const Pet = require("../models/Pet.model");
+const Pet = require("../models/Pet.model.js");
 
 (async () => {
   try {
