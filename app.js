@@ -1,25 +1,29 @@
-// ℹ️ Gets access to environment variables/settings
-// https://www.npmjs.com/package/dotenv
+// app.js
 require("dotenv").config();
+require("./db"); // conect MongoDB
 
-// ℹ️ Connects to the database
-require("./db");
-
-// Handles http requests (express is node js framework)
-// https://www.npmjs.com/package/express
 const express = require("express");
-
 const app = express();
 
-// ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
-require("./config")(app);
+require("./config")(app); // middlewares
 
-// 👇 Start handling routes here
+// Route
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
+
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
-// ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
+
+// Health check (opcional)
+app.get("/health", (req, res) => {
+  res.status(200).json({ message: "server is good!" });
+});
+
+// Error handling
 require("./error-handling")(app);
 
-module.exports = app;
+// Start server
+const PORT = process.env.PORT || 5005;
+app.listen(PORT, () => {
+  console.log(`Server up, running on http://localhost:${PORT}`);
+});
