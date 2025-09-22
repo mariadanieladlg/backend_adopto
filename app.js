@@ -3,16 +3,21 @@ require("dotenv").config();
 require("./db"); // conect MongoDB
 
 const express = require("express");
+
 const app = express();
 
 require("./config")(app); // middlewares
 
-// Route
+// Routes
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
 
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
+
+// Import and register user routes
+const userRoutes = require("./routes/user.routes");
+app.use("/users", userRoutes); //all routes starts with users
 
 // Health check (opcional)
 app.get("/health", (req, res) => {
