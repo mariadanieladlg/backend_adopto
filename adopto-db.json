@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 [
   {
     "id": 1,
@@ -33,48 +32,6 @@
     "contact": {
       "email": "adoptions@tilburg-shelter.org",
       "phone": "+31 6 70291817"
-=======
-{
-  "pets": [
-    {
-      "id": 1,
-      "name": "Max",
-      "species": "cat",
-      "life_stage": "adult",
-      "sex": "male",
-      "age_months": 93,
-      "breed": "Siamese",
-      "color": "calico",
-      "size": null,
-      "weight_kg": 3.7,
-      "location_city": "Tilburg",
-      "location_country": "Netherlands",
-      "microchipped": false,
-      "microchip_id": null,
-      "vaccinated": ["FVRCP", "Rabies", "FeLV"],
-      "dewormed": true,
-      "spayed_neutered": true,
-      "good_with_dogs": true,
-      "good_with_cats": true,
-      "good_with_kids": true,
-      "energy_level": 5,
-      "house_trained": true,
-      "description": "Shy-but-loving cat. good with dogs, good with cats, good with kids. very high energy.",
-      "images": [
-        "https://animalia.bio/pets/siamese-cat",
-        "/images/pets/1_2.jpg"
-      ],
-      "video": null,
-      "status": "available",
-      "adoption_fee_eur": 140,
-      "posted_at": "2025-08-25",
-      "shelter_id": "SHEL-325",
-      "contact": {
-        "email": "adoptions@tilburg-shelter.org",
-        "phone": "+31 6 70291817"
-      },
-      "tags": ["adult", "cat", "siamese", "calico"]
->>>>>>> ab8d989 (tuesday2018hs)
     },
     "tags": ["adult", "cat", "siamese", "calico"]
   },
