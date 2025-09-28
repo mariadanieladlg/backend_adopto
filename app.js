@@ -1,20 +1,28 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 
-// ℹ️ This function is getting exported from the config folder. It runs most pieces of middleware
-require("./config")(app);
-require("dotenv").config();
+// MIDDLEWARE GLOBAL
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// DB connection
-const connectDB = require("./db");
+// TEST DEBUG
+app.use((req, res, next) => {
+  console.log("Body Received:", req.body);
+  next();
+});
+
+//CONFIG.
+require("./config/index")(app);
+
+// DB CONNECTION
+const connectDB = require("./db/index");
 connectDB();
 
-// 👇 Start handling routes here
+// ROUTES
 const indexRoutes = require("./routes/index.routes");
 app.use("/api", indexRoutes);
-
-const authRoutes = require("./routes/auth.routes");
-app.use("/auth", authRoutes);
 
 const userRoutes = require("./routes/user.routes");
 app.use("/user", userRoutes);
@@ -22,16 +30,16 @@ app.use("/user", userRoutes);
 const petRoutes = require("./routes/pets.routes");
 app.use("/pets", petRoutes);
 
-// Health check
+// HEALTH CHECK
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "server is good!" });
 });
 
-// ❗ Error handling middleware
-require("./error-handling")(app);
+// ERROR HANDLING
+require("./error-handling/index")(app);
 
-// --- START SERVER ---
+// START SERVER
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
-  console.log(` Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

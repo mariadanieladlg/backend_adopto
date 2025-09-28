@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
 
     if (!process.env.TOKEN_SECRET) {
       console.error("TOKEN_SECRET missing in .env file");
-      return res.status(500).json({ errorMessage: "Server misconfiguration" });
+      return res.status(500).json({ errorMessage: "Error config" });
     }
 
     const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
