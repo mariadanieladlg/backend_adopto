@@ -2,6 +2,7 @@ const router = require("express").Router();
 const mongoose = require("mongoose");
 const Pet = require("../models/Pet.model");
 
+// Helper: filter according ObjectId or id numérico
 //HELPER: FILTER
 function buildIdFilter(idParam) {
   if (mongoose.Types.ObjectId.isValid(idParam)) return { _id: idParam };
@@ -9,6 +10,7 @@ function buildIdFilter(idParam) {
   return null;
 }
 const toCamel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
 function expandCaseVariants(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
@@ -16,6 +18,8 @@ function expandCaseVariants(obj) {
     const camel = toCamel(k);
     if (camel !== k) out[camel] = v;
   }
+
+  // alias
   //ALIAS
   if ("good_with_dogs" in obj)
     out.goodWith = { ...(out.goodWith || {}), dogs: !!obj.good_with_dogs };
@@ -23,6 +27,30 @@ function expandCaseVariants(obj) {
     out.goodWith = { ...(out.goodWith || {}), cats: !!obj.good_with_cats };
   if ("good_with_kids" in obj)
     out.goodWith = { ...(out.goodWith || {}), kids: !!obj.good_with_kids };
+
+  if ("house_trained" in obj) out.houseTrained = !!obj.house_trained;
+  if ("spayed_neutered" in obj) out.spayedNeutered = !!obj.spayed_neutered;
+
+  if ("location_city" in obj) out.locationCity = obj.location_city ?? null;
+  if ("location_country" in obj)
+    out.locationCountry = obj.location_country ?? null;
+
+  if ("microchip_id" in obj) out.microchipId = obj.microchip_id ?? null;
+
+  if ("weight_kg" in obj) out.weightKg = obj.weight_kg;
+  if ("age_months" in obj) out.ageMonths = obj.age_months;
+  if ("adoption_fee_eur" in obj) out.adoptionFeeEur = obj.adoption_fee_eur;
+
+  if ("posted_at" in obj) out.postedAt = obj.posted_at ?? null;
+  if ("shelter_id" in obj) out.shelterId = obj.shelter_id ?? null;
+
+  return out;
+}
+
+// Helper
+function normalizePayload(body) {
+  const payload = { ...body };
+
   if ("house_trained" in obj) out.houseTrained = !!obj.house_trained;
   if ("spayed_neutered" in obj) out.spayedNeutered = !!obj.spayed_neutered;
   if ("location_city" in obj) out.locationCity = obj.location_city ?? null;
@@ -46,6 +74,7 @@ function normalizePayload(body) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   };
+
   if ("age_months" in payload)
     payload.age_months = toNumber(payload.age_months);
   if ("weight_kg" in payload) payload.weight_kg = toNumber(payload.weight_kg);
@@ -53,6 +82,7 @@ function normalizePayload(body) {
     payload.adoption_fee_eur = toNumber(payload.adoption_fee_eur);
   if ("energy_level" in payload)
     payload.energy_level = toNumber(payload.energy_level);
+
   const toBool = (v) => !!(v === true || v === "true" || v === 1 || v === "1");
   [
     "microchipped",
@@ -65,6 +95,7 @@ function normalizePayload(body) {
   ].forEach((k) => {
     if (k in payload) payload[k] = toBool(payload[k]);
   });
+
   const toArray = (v) =>
     Array.isArray(v)
       ? v
@@ -77,6 +108,7 @@ function normalizePayload(body) {
   if ("vaccinated" in payload) payload.vaccinated = toArray(payload.vaccinated);
   if ("tags" in payload) payload.tags = toArray(payload.tags);
   if ("images" in payload) payload.images = toArray(payload.images);
+
   [
     "breed",
     "color",
@@ -90,6 +122,11 @@ function normalizePayload(body) {
   ].forEach((k) => {
     if (k in payload && payload[k] === "") payload[k] = null;
   });
+
+  return expandCaseVariants(payload);
+}
+
+// ------------------- GET /pets -------------------
   return expandCaseVariants(payload);
 }
 // GET PETS
@@ -106,11 +143,13 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ------------------- GET /pets/:id -------------------
 // GET PETS ID
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     let pet = null;
+
     if (mongoose.Types.ObjectId.isValid(id)) {
       pet = await Pet.findById(id);
     }
@@ -125,17 +164,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// ------------------- PUT /pets/:id (update full) -------------------
 //PUT (UPDATE PETS)
 router.put("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
     if (!filter) return res.status(400).json({ message: "Invalid id" });
+
+    const $set = normalizePayload(req.body);
+
     const $set = normalizePayload(req.body);
     const updated = await Pet.findOneAndUpdate(
       filter,
       { $set },
       { new: true, runValidators: true }
     );
+
     if (!updated) return res.status(404).json({ message: "Pet not found" });
     res.json(updated);
   } catch (err) {
@@ -144,17 +188,22 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// ------------------- PATCH /pets/:id (update parcial) -------------------
 // PATCH (PARTIAL UPDATE)
 router.patch("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
     if (!filter) return res.status(400).json({ message: "Invalid id" });
+
+    const $set = normalizePayload(req.body);
+
     const $set = normalizePayload(req.body);
     const updated = await Pet.findOneAndUpdate(
       filter,
       { $set },
       { new: true, runValidators: true }
     );
+
     if (!updated) return res.status(404).json({ message: "Pet not found" });
     res.json(updated);
   } catch (err) {
@@ -163,11 +212,16 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// ------------------- DELETE /pets/:id -------------------
 // DELETE PETS
 router.delete("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
     if (!filter) return res.status(400).json({ message: "Invalid id" });
+
+    const deleted = await Pet.findOneAndDelete(filter);
+    if (!deleted) return res.status(404).json({ message: "Pet not found" });
+
     const deleted = await Pet.findOneAndDelete(filter);
     if (!deleted) return res.status(404).json({ message: "Pet not found" });
     res.status(200).json({ message: "Pet deleted" });
