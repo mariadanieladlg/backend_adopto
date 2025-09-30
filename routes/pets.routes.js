@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Pet = require("../models/Pet.model");
 
 // Helper: filter according ObjectId or id numérico
+//HELPER: FILTER
 function buildIdFilter(idParam) {
   if (mongoose.Types.ObjectId.isValid(idParam)) return { _id: idParam };
   if (!isNaN(Number(idParam))) return { id: Number(idParam) };
@@ -19,6 +20,7 @@ function expandCaseVariants(obj) {
   }
 
   // alias
+  //ALIAS
   if ("good_with_dogs" in obj)
     out.goodWith = { ...(out.goodWith || {}), dogs: !!obj.good_with_dogs };
   if ("good_with_cats" in obj)
@@ -49,6 +51,22 @@ function expandCaseVariants(obj) {
 function normalizePayload(body) {
   const payload = { ...body };
 
+  if ("house_trained" in obj) out.houseTrained = !!obj.house_trained;
+  if ("spayed_neutered" in obj) out.spayedNeutered = !!obj.spayed_neutered;
+  if ("location_city" in obj) out.locationCity = obj.location_city ?? null;
+  if ("location_country" in obj)
+    out.locationCountry = obj.location_country ?? null;
+  if ("microchip_id" in obj) out.microchipId = obj.microchip_id ?? null;
+  if ("weight_kg" in obj) out.weightKg = obj.weight_kg;
+  if ("age_months" in obj) out.ageMonths = obj.age_months;
+  if ("adoption_fee_eur" in obj) out.adoptionFeeEur = obj.adoption_fee_eur;
+  if ("posted_at" in obj) out.postedAt = obj.posted_at ?? null;
+  if ("shelter_id" in obj) out.shelterId = obj.shelter_id ?? null;
+  return out;
+}
+// Helper
+function normalizePayload(body) {
+  const payload = { ...body };
   // convert "4,9" to 4.9 and strings
   const toNumber = (v) => {
     if (v === "" || v === null || v === undefined) return null;
@@ -109,12 +127,14 @@ function normalizePayload(body) {
 }
 
 // ------------------- GET /pets -------------------
+  return expandCaseVariants(payload);
+}
+// GET PETS
 router.get("/", async (req, res) => {
   try {
     const { species } = req.query;
     const query = {};
     if (species) query.species = species;
-
     const pets = await Pet.find(query);
     res.status(200).json(pets);
   } catch (err) {
@@ -124,10 +144,10 @@ router.get("/", async (req, res) => {
 });
 
 // ------------------- GET /pets/:id -------------------
+// GET PETS ID
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     let pet = null;
 
     if (mongoose.Types.ObjectId.isValid(id)) {
@@ -136,9 +156,7 @@ router.get("/:id", async (req, res) => {
     if (!pet && !isNaN(Number(id))) {
       pet = await Pet.findOne({ id: Number(id) });
     }
-
     if (!pet) return res.status(404).json({ message: "Pet not found" });
-
     res.status(200).json(pet);
   } catch (err) {
     console.error(err);
@@ -147,6 +165,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // ------------------- PUT /pets/:id (update full) -------------------
+//PUT (UPDATE PETS)
 router.put("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
@@ -154,6 +173,7 @@ router.put("/:id", async (req, res) => {
 
     const $set = normalizePayload(req.body);
 
+    const $set = normalizePayload(req.body);
     const updated = await Pet.findOneAndUpdate(
       filter,
       { $set },
@@ -169,6 +189,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // ------------------- PATCH /pets/:id (update parcial) -------------------
+// PATCH (PARTIAL UPDATE)
 router.patch("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
@@ -176,6 +197,7 @@ router.patch("/:id", async (req, res) => {
 
     const $set = normalizePayload(req.body);
 
+    const $set = normalizePayload(req.body);
     const updated = await Pet.findOneAndUpdate(
       filter,
       { $set },
@@ -191,6 +213,7 @@ router.patch("/:id", async (req, res) => {
 });
 
 // ------------------- DELETE /pets/:id -------------------
+// DELETE PETS
 router.delete("/:id", async (req, res) => {
   try {
     const filter = buildIdFilter(req.params.id);
@@ -199,11 +222,12 @@ router.delete("/:id", async (req, res) => {
     const deleted = await Pet.findOneAndDelete(filter);
     if (!deleted) return res.status(404).json({ message: "Pet not found" });
 
+    const deleted = await Pet.findOneAndDelete(filter);
+    if (!deleted) return res.status(404).json({ message: "Pet not found" });
     res.status(200).json({ message: "Pet deleted" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to delete pet" });
   }
 });
-
 module.exports = router;

@@ -18,13 +18,8 @@ const userSchema = new Schema(
       required: [true, "Username is required"],
       trim: true,
       minLength: 3,
-      maxLenght: 32,
+      maxLength: 32,
       unique: true,
-    },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user", // everything starts with user.
     },
   },
   {
