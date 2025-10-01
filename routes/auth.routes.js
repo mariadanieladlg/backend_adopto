@@ -4,16 +4,15 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { isAuthenticated } = require("../middlewares/jwt.middleware");
 
-//1.SIGNUP TO CHECK USER EMAIL
+// REGISTER
 router.post("/signup", async (req, res) => {
   try {
-    // Email already exists?!
+    //Email exists?
     const foundUser = await UserModel.findOne({ email: req.body.email });
     if (foundUser) {
       res.status(403).json({ errorMessage: "Email already taken" });
     } else {
-      //Create the salt
-      //Create the hashed password
+      //create the hashed password
 
       const theSalt = bcryptjs.genSaltSync(12);
       const theHashedPassword = bcryptjs.hashSync(req.body.password, theSalt);
@@ -31,47 +30,49 @@ router.post("/signup", async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json("Error creating user");
+    res.status(500).json("problem creating user");
   }
 });
 
-//2.LOGIN TO FIND USER EMAIL
+// LOGIN
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    const foundUser = await UserModel.findOne({ email });
+    //Find user email
+    const foundUser = await UserModel.findOne({ email: req.body.email });
     if (!foundUser) {
-      return res.status(401).json({ errorMessage: "Invalid credentials" });
+      res.status(500).json({ errorMessage: "invalid credentials" });
+    } else {
+      //Compare email and Password
+      const doesPasswordMatch = bcryptjs.compareSync(
+        req.body.password,
+        foundUser.password
+      );
+      if (!doesPasswordMatch) {
+        res.status(500).json({ errorMessage: "invalid credentials" });
+      } else {
+        // ****************JWT token*************
+
+        const payload = { _id: foundUser._id };
+
+        const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
+          algorithm: "HS256",
+          expiresIn: "6h",
+        });
+
+        res
+          .status(200)
+          .json({ message: "You are logged in! Nice work", authToken });
+      }
     }
-
-    const isPasswordValid = bcryptjs.compareSync(password, foundUser.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ errorMessage: "Invalid credentials" });
-    }
-
-    const payload = { _id: foundUser._id, role: foundUser.role };
-
-    if (!process.env.TOKEN_SECRET) {
-      console.error("TOKEN_SECRET missing in .env file");
-      return res.status(500).json({ errorMessage: "Error config" });
-    }
-
-    const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
-      algorithm: "HS256",
-      expiresIn: "6h",
-    });
-
-    res.status(200).json({ message: "Logged in successfully", authToken });
   } catch (error) {
-    console.error("Error logging in:", error);
-    res.status(500).json({ errorMessage: "Error logging in" });
+    console.log(error);
+    res.status(500).json("problem signup user");
   }
 });
 
-//VERIFY ROUTE
+//verify route
 router.get("/verify", isAuthenticated, async (req, res) => {
-  res.status(200).json({ message: "Token is good", payload: req.payload });
+  res.status(200).json({ message: "Token good", payload: req.headers.payload });
 });
 
 module.exports = router;
