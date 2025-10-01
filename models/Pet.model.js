@@ -1,46 +1,42 @@
+// models/Pet.model.js
 const { Schema, model } = require("mongoose");
-const petSchema = new Schema(
+const PetSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true },
-    species: { type: String, enum: ["cat", "dog"], required: true },
-    lifeStage: { type: String, enum: ["kitten", "adult", "puppy"], trim: true },
-    sex: { type: String, enum: ["male", "female"], required: true },
-    ageMonths: { type: Number, min: 0, required: true },
-    breed: { type: String, default: "Mixed Breed" },
-    color: { type: String, trim: true },
-    size: { type: String, enum: ["small", "medium", "large"], required: false },
-    weightKg: { type: Number, min: 0 },
-    locationCity: { type: String, required: true },
-    locationCountry: { type: String, required: true },
+    // Permite buscar por _id o por id numérico (si lo tienes en tu seed)
+    id: { type: Number, index: true, unique: true, sparse: true },
+    name: { type: String, required: true },
+    species: { type: String, enum: ["dog", "cat", "other"], default: "dog" },
+    life_stage: {
+      type: String,
+      enum: ["baby", "young", "adult", "senior"],
+      default: "adult",
+    },
+    sex: {
+      type: String,
+      enum: ["male", "female", "unknown"],
+      default: "unknown",
+    },
+    age_months: { type: Number, default: null },
+    breed: { type: String, default: null },
+    color: { type: String, default: null },
+    size: { type: String, default: null },
+    weight_kg: { type: Number, default: null },
+    location_city: { type: String, default: null },
+    location_country: { type: String, default: null },
     microchipped: { type: Boolean, default: false },
-    microchipId: { type: String, trim: true },
+    microchip_id: { type: String, default: null },
     vaccinated: [{ type: String }],
     dewormed: { type: Boolean, default: false },
-    spayedNeutered: { type: Boolean, default: false },
-    goodWith: {
-      dogs: { type: Boolean, default: false },
-      cats: { type: Boolean, default: false },
-      kids: { type: Boolean, default: false },
-    },
-    energyLevel: { type: Number, min: 1, max: 5 },
-    houseTrained: { type: Boolean, default: false },
-    description: { type: String, maxlength: 1000 },
+    spayed_neutered: { type: Boolean, default: false },
+    good_with_dogs: { type: Boolean, default: false },
+    good_with_cats: { type: Boolean, default: false },
+    good_with_kids: { type: Boolean, default: false },
+    energy_level: { type: Number, min: 1, max: 5, default: 3 },
+    house_trained: { type: Boolean, default: false },
+    description: { type: String, default: "" },
+    // Usa un array de strings para URLs locales (/uploads/...) o absolutas
     images: [{ type: String }],
-    video: { type: String },
-    status: {
-      type: String,
-      enum: ["available", "reserved", "adopted"],
-      default: "available",
-    },
-    adoptionFeeEur: { type: Number, min: 0 },
-    postedAt: { type: Date },
-    shelterId: { type: String, trim: true },
-    contact: {
-      email: { type: String, trim: true },
-      phone: { type: String, trim: true },
-    },
-    tags: [{ type: String, trim: true }],
   },
   { timestamps: true }
 );
-module.exports = model("Pet", petSchema);
+module.exports = model("Pet", PetSchema);
