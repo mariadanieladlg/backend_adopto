@@ -1,20 +1,28 @@
 const jwt = require("jsonwebtoken");
 
 function isAuthenticated(req, res, next) {
+  // Authorization exist?
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    if (
-      req.headers.authorization.split(" ")[0] === "Bearer" &&
-      req.headers.authorization.split(" ")[1]
-    ) {
-      const theToken = req.headers.authorization.split(" ")[1];
-      const theData = jwt.verify(theToken, process.env.TOKEN_SECRET);
-      req.headers.payload = theData;
-      next();
-    } else {
-      res.status(400).json({ errorMessage: "no token" });
-    }
+    // Verify Token
+    const payload = jwt.verify(token, process.env.TOKEN_SECRET, {
+      algorithms: ["HS256"],
+    });
+
+    req.payload = payload;
+
+    next();
   } catch (error) {
-    res.status(403).json({ errorMessage: "Invalid Token" });
+    console.error("❌ Invalid token:", error.message);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 }
+
 module.exports = { isAuthenticated };

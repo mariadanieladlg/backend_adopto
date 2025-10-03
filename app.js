@@ -43,6 +43,8 @@ app.use("/pets", petRoutes);
 
 const pawRoutes = require("./routes/paw.routes");
 app.use("/paw", pawRoutes);
+const userRoutes = require("./routes/user.routes");
+app.use("/users", userRoutes);
 
 // HEALTH CHECK
 app.get("/health", (req, res) => {
